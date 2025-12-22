@@ -2,6 +2,7 @@ import math
 import pygame
 from pygame.locals import *
 import random
+import os
 
 # --- CONFIGURAÇÕES INICIAIS ---
 pygame.init()
@@ -21,47 +22,79 @@ INVULNERAVEL_TEMPO = 2000
 #Caso haja erro De carregar a imagem já funciona aqui
 Tamanho_mapa, Altura_mapa = 4000, 2400
 
+#OS para as imagens sempre carregarem
+
+# --- PREPARAÇÃO DE DIRETÓRIOS ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+IMG_DIR = os.path.join(BASE_DIR, "LimbusSurvivorsIMG")
+BGM_DIR = os.path.join(BASE_DIR, "LimbusSurvivorsBGM")
+
+# Debug
+print(f"Diretório Base: {BASE_DIR}")
+print(f"Diretório Imagens: {IMG_DIR}")
+
+def img(nome):
+    path = os.path.join(IMG_DIR, nome)
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Imagem não encontrada: {path}")
+    return pygame.image.load(path).convert_alpha()
+
+def music(nome):
+    path = os.path.join(BGM_DIR, nome)
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Música não encontrada: {path}")
+    pygame.mixer.music.load(path)
+
+def sfx(nome, volume=1.0):
+    path = os.path.join(BGM_DIR, nome)
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"SFX não encontrado: {path}")
+    som = pygame.mixer.Sound(path)
+    som.set_volume(volume)
+    return som
+
 # --- CARREGAMENTO DE ASSETS ---
 try:
-    Background_Img = pygame.image.load("LimbusSurvivors/LimbusSurvivorsIMG/Casino.png").convert()
+    
+    Background_Img = img("Casino.png")
 
     Tamanho_mapa = Background_Img.get_width() 
     Altura_mapa = Background_Img.get_height() 
 
-    Jogador_Img = pygame.image.load("LimbusSurvivors/LimbusSurvivorsIMG/Ishmael_idle.png").convert_alpha()
+    Jogador_Img = img("Ishmael_idle.png")
     Jogador_Img = pygame.transform.scale(Jogador_Img, (128, 128))
     Jogador_Espelhado = pygame.transform.flip(Jogador_Img, True, False)
     
-    Inimigo_Img = pygame.image.load("LimbusSurvivors/LimbusSurvivorsIMG/Middle_base.png").convert_alpha()
+    Inimigo_Img = img("Middle_base.png")
     Inimigo_Img = pygame.transform.scale(Inimigo_Img, (128, 128))
     
-    icone = pygame.image.load("LimbusSurvivors/LimbusSurvivorsIMG/Icon.png")
-    pygame.display.set_icon(icone)
+    try:
+        icone = img("Icon.png")
+        pygame.display.set_icon(icone)
+    except:
+        print("Aviso: Ícone não encontrado, ignorando.")
     
-    pygame.mixer.music.load('LimbusSurvivors/LimbusSurvivorsBGM/CasinoTheme.mp3')
-    pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(0.3)
+    try:
+        music("CasinoTheme.mp3")
+        pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(0.3)
+    except Exception as e:
+        print(f"Erro ao carregar música: {e}")
 
-    damage_sound = pygame.mixer.Sound('LimbusSurvivors/LimbusSurvivorsBGM/IshmaelDamage.wav')
-    damage_sound.set_volume(0.3)
+    try:
+        damage_sound = sfx("IshmaelDamage.wav", 0.3)
+    except:
+        damage_sound = None 
+
 except Exception as e:
-    print(f"ERRO CRÍTICO: Arquivos não encontrados. Usando modo de depuração. Erro: {e}")
-    
+    print(f"ERRO FATAL AO CARREGAR ASSETS: {e}")
     Background_Img = pygame.Surface((Tamanho_mapa, Altura_mapa))
     Background_Img.fill((50, 50, 50))
-
-    Jogador_Img = pygame.Surface((128, 128))
-    Jogador_Img.fill((0, 0, 255)) 
-    Jogador_Espelhado = Jogador_Img 
-
-    Inimigo_Img = pygame.Surface((128, 128))
-    Inimigo_Img.fill((255, 0, 0))
-
-    class SomFalso:
-        def play(self): pass
-        def set_volume(self, v): pass
     
-    damage_sound = SomFalso())
+    Jogador_Img = pygame.Surface((128, 128))
+    Jogador_Img.fill((0, 255, 0)) 
+    Inimigo_Img = pygame.Surface((128, 128))
+    Inimigo_Img.fill((255, 0, 0)) 
 
 # --- VARIÁVEIS DE JOGO ---
 # Mapa jogavel
@@ -237,6 +270,5 @@ while running:
     pygame.display.flip()
 
     clock.tick(60)
-
 
 pygame.quit()
