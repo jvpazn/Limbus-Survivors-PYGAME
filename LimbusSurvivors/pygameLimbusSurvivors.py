@@ -45,9 +45,23 @@ try:
     damage_sound = pygame.mixer.Sound('LimbusSurvivors/LimbusSurvivorsBGM/IshmaelDamage.wav')
     damage_sound.set_volume(0.3)
 except Exception as e:
-    print(f"Erro ao carregar arquivos: {e}")
+    print(f"ERRO CRÍTICO: Arquivos não encontrados. Usando modo de depuração. Erro: {e}")
+    
     Background_Img = pygame.Surface((Tamanho_mapa, Altura_mapa))
     Background_Img.fill((50, 50, 50))
+
+    Jogador_Img = pygame.Surface((128, 128))
+    Jogador_Img.fill((0, 0, 255)) 
+    Jogador_Espelhado = Jogador_Img 
+
+    Inimigo_Img = pygame.Surface((128, 128))
+    Inimigo_Img.fill((255, 0, 0))
+
+    class SomFalso:
+        def play(self): pass
+        def set_volume(self, v): pass
+    
+    damage_sound = SomFalso())
 
 # --- VARIÁVEIS DE JOGO ---
 # Mapa jogavel
@@ -223,5 +237,6 @@ while running:
     pygame.display.flip()
 
     clock.tick(60)
+
 
 pygame.quit()
