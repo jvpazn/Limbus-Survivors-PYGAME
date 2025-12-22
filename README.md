@@ -45,7 +45,20 @@ LimbusSurvivors/
 
 └── pygameLimbusSurvivors.py  # Main Script
 
+---
 
+## 🫂 A special thanks to all the testers!
+- [Matheus Luciano](https://github.com/Matheus-LucianoC)
+
+- [João Guilherme](https://github.com/Guilherme-lopes-F)
+
+- [Artur Tomé](https://github.com/ArturTome)
+
+- [Juan Vila](https://github.com/juanvnrojas)
+
+- [Davi Gleristone](https://github.com/Gl3ristone)
+
+- [Renan Aprigio](https://github.com/renandias3158)
 ---
 
 *Developed with passion for the City*
