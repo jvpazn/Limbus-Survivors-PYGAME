@@ -59,6 +59,8 @@ LimbusSurvivors/
 - [Davi Gleristone](https://github.com/Gl3ristone)
 
 - [Renan Aprigio](https://github.com/renandias3158)
+
+- [Romulo Oliveira](https://github.com/romulo2639)
 ---
 
 *Developed with passion for the City*
