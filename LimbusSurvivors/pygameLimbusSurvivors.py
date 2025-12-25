@@ -130,7 +130,7 @@ try:
         for i in range(6):
             fallback = pygame.Surface((150, 150), pygame.SRCALPHA)
             raio = 10 + (i * 20)
-            pygame.draw.circle(fallback, (255, 100, 0, 200), (75, 75), raio)
+            pygame.draw.circle(fallback, (255, 100, 0, 200), (80, 80), raio)
             animacao_explosao.append(fallback)
 
     #Sons
@@ -219,18 +219,35 @@ class InimigoBasico:
         self.vel = 3
         self.max_hp = 10 # Salvei o maximo pra calcular a barra
         self.hp = self.max_hp 
+        self.kb_x = 0
+        self.kb_y = 0
+        self.atrito = 0.9
 
     def atualizar(self, player_rect, inimigos):
-        #Movimento
+# Movimento Normal ---
         dx = player_rect.centerx - self.rect.centerx
         dy = player_rect.centery - self.rect.centery
         dist = math.hypot(dx, dy)
 
-        if dist > 0:
+        move_x = 0
+        move_y = 0
+        forca_kb = math.hypot(self.kb_x, self.kb_y)
+        
+        if dist > 0 and forca_kb < 10: 
             move_x = (dx / dist) * self.vel
             move_y = (dy / dist) * self.vel
-            self.rect.x += move_x
-            self.rect.y += move_y
+
+        #Knockback ---
+        self.rect.x += move_x + self.kb_x
+        self.rect.y += move_y + self.kb_y
+
+        # Reduz o knockback
+        self.kb_x *= self.atrito
+        self.kb_y *= self.atrito
+
+        # Limpa valores muito pequenos para parar processamento desnecessário
+        if abs(self.kb_x) < 0.1: self.kb_x = 0
+        if abs(self.kb_y) < 0.1: self.kb_y = 0
 
         #Empurrão
         for outro in inimigos:
@@ -409,14 +426,20 @@ while running:
             # Usamos uma cópia da lista [:] para poder remover inimigos sem bugar o loop
             for inimigo in lista_inimigos[:]:
                 if explosao.rect.colliderect(inimigo.rect):
-                    
-                    # EMPURRÃO (KNOCKBACK) - Acontece a cada frame
-                    dx = inimigo.rect.centerx - explosao.rect.centerx
-                    dy = inimigo.rect.centery - explosao.rect.centery
-                    dist = math.hypot(dx, dy)
-                    if dist > 0:
-                        inimigo.rect.x += (dx / dist) * 15 
-                        inimigo.rect.y += (dy / dist) * 15
+                    if inimigo not in explosao.atingidos:
+                        if inimigo not in explosao.atingidos:
+                        
+                            # CÁLCULO DO VETOR
+                            dx = inimigo.rect.centerx - explosao.rect.centerx
+                            dy = inimigo.rect.centery - explosao.rect.centery
+                            dist = math.hypot(dx, dy)
+                            
+                            if dist > 0:
+
+                                impulso = 12
+                                
+                                inimigo.kb_x = (dx / dist) * impulso
+                                inimigo.kb_y = (dy / dist) * impulso
 
                     # 2. DANO - Acontece apenas SE o inimigo ainda não foi atingido por ESSA explosão
                     if inimigo not in explosao.atingidos:
@@ -433,12 +456,16 @@ while running:
         invulneravel = False
 
     for inimigo in lista_inimigos:
-        if player_rect.colliderect(inimigo.rect) and not invulneravel:
+        dx = player_rect.centerx - inimigo.rect.centerx
+        dy = player_rect.centery - inimigo.rect.centery
+        distancia = math.hypot(dx, dy)
+        
+        if distancia < (DIST_MIN + 5) and not invulneravel:
             if damage_sound: damage_sound.play()
             player_hp -= 1
             invulneravel = True
             timer_invulneravel = tempo_atual
-        
+            
     if player_hp <= 0:
         print("Game Over")
         running = False 
