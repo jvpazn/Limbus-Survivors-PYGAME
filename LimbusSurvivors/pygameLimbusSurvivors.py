@@ -140,7 +140,7 @@ try:
     music("CasinoTheme.mp3")
     if pygame.mixer.music.get_busy() == False and os.path.exists(os.path.join(BGM_DIR, "CasinoTheme.mp3")):
         pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(0.3)
+        pygame.mixer.music.set_volume(0)
 
     damage_sound = sfx("IshmaelDamage.wav", 0.3)
     explosao_sound = sfx("Explosion.wav", 0.4) 
@@ -167,7 +167,9 @@ playerMax_hp = 10
 player_hp = 10          
 invulneravel = False    
 timer_invulneravel = 0 
+INVULNERAVEL_TEMPOBase = 1500  
 INVULNERAVEL_TEMPO = 1500  
+velocidade_playerBase = 6
 velocidade_player = 6
 danoBase = 3
 dano = 3
@@ -175,6 +177,57 @@ COOLDOWN_ARMA_BASE = 1500
 COOLDOWN_ARMA = 1500
 ultimo_ataque = 0 
 espelhado = False 
+Level = 1
+xp = 0
+xp_passar_nivel = 130
+
+def passar_nivel(LevelAtual, xpNivel, xpAtual):
+    while xpAtual >= xpNivel:
+        LevelAtual += 1
+        xpAtual = xpAtual - xpNivel
+        xpNivel = int(xpNivel * 1.15)
+    else:
+        pass
+    return LevelAtual, xpNivel, xpAtual
+
+
+# E.G.O Gifts
+
+grade_fixerHaving = False
+# Se grade_fixerHaving For TRUE automaticamente grade_fixerLevel tem que ser 1 ou mais
+grade_fixerLevel = 0
+
+def GradeFixerEGO(Having, level):
+    global dano, COOLDOWN_ARMA, velocidade_player, INVULNERAVEL_TEMPO
+    if Having == True:
+        if level == 1:
+            dano = danoBase * 1.02
+            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.98
+            velocidade_player = velocidade_playerBase * 1.02
+            INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.02
+        if level == 2:
+            dano = danoBase * 1.05
+            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.95
+            velocidade_player = velocidade_playerBase * 1.05
+            INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.05
+        if level == 3:
+            dano = danoBase * 1.07
+            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.93
+            velocidade_player = velocidade_playerBase * 1.07
+            INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.07
+        if level == 4:
+            dano = danoBase * 1.10
+            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.90
+            velocidade_player = velocidade_playerBase * 1.10
+            INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.10
+        if level == 5:
+            dano = danoBase * 1.15
+            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.85
+            velocidade_player = velocidade_playerBase * 1.15
+            INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.15
+    else:
+        pass
+
 
 # Cores
 VERMELHO = (220, 20, 60) 
@@ -222,6 +275,7 @@ class InimigoBasico:
         self.kb_x = 0
         self.kb_y = 0
         self.atrito = 0.9
+        self.xp_drop = 15
 
     def atualizar(self, player_rect, inimigos):
 # Movimento Normal ---
@@ -450,6 +504,7 @@ while running:
                         if inimigo.hp <= 0:
                             if inimigo in lista_inimigos:
                                 lista_inimigos.remove(inimigo)
+                                xp += inimigo.xp_drop
 
     # Colisão Inimigo -> Player
     if invulneravel and tempo_atual - timer_invulneravel >= INVULNERAVEL_TEMPO:
@@ -469,6 +524,10 @@ while running:
     if player_hp <= 0:
         print("Game Over")
         running = False 
+
+    #Upar de nivel, etc
+    Level, xp_passar_nivel, xp = passar_nivel(Level, xp_passar_nivel, xp)
+    GradeFixerEGO(grade_fixerHaving, grade_fixerLevel)
 
     # Câmera
     camera.center = player_rect.center
@@ -543,6 +602,9 @@ while running:
     txt_rect = txt.get_rect(center=(LARGURA // 2, 30))
     screen.blit(txt, txt_rect)
     
+    txt_lvl = font.render(f"LVL: {Level} | XP: {int(xp)}/{xp_passar_nivel}", True, "yellow")
+    screen.blit(txt_lvl, (20, 80))
+
     fps_atual = int(clock.get_fps()) 
     txt_fps = font.render(f"FPS: {fps_atual}", True, "green") 
     screen.blit(txt_fps, (LARGURA - 150, 20))
