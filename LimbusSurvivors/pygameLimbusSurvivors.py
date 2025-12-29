@@ -14,8 +14,6 @@ screen = pygame.display.set_mode((LARGURA, ALTURA), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 pygame.display.set_caption("Limbus Survivors Beta")
 
-# Valores padrão de mapa (evitar bugs)
-Tamanho_mapa, Altura_mapa = 4000, 2400
 
 # --- PREPARAÇÃO DE DIRETÓRIOS ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -73,14 +71,27 @@ def carregar_spritesheet_grade(nome_arquivo, colunas, linhas, escala_final=None)
     return frames
 
 # --- CARREGAMENTO DE ASSETS ---
+#MAPA 
 try:
-    #Fundo
+    # Defina aqui quantas vezes quer aumentar o mapa (Ex: 2.0 é o dobro, 1.5 é 50% maior)
+    MULTIPLICADOR_MAPA = 2.0 
+
+    # Fundo
     tmp_bg = img("Casino.png")
     if tmp_bg:
-        Background_Img = tmp_bg
+        largura_original = tmp_bg.get_width()
+        altura_original = tmp_bg.get_height()
+
+        nova_largura = int(largura_original * MULTIPLICADOR_MAPA)
+        nova_altura = int(altura_original * MULTIPLICADOR_MAPA)
+
+        Background_Img = pygame.transform.scale(tmp_bg, (nova_largura, nova_altura))
+        
         Tamanho_mapa = Background_Img.get_width() 
         Altura_mapa = Background_Img.get_height() 
     else:
+        Tamanho_mapa = int(4000 * MULTIPLICADOR_MAPA)
+        Altura_mapa = int(2400 * MULTIPLICADOR_MAPA)
         Background_Img = pygame.Surface((Tamanho_mapa, Altura_mapa))
         Background_Img.fill((50, 50, 50))
 
@@ -156,7 +167,7 @@ try:
     music("CasinoTheme.mp3")
     if pygame.mixer.music.get_busy() == False and os.path.exists(os.path.join(BGM_DIR, "CasinoTheme.mp3")):
         pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(0)
+        pygame.mixer.music.set_volume(0.3)
 
     damage_sound = sfx("IshmaelDamage.wav", 0.3)
     explosao_sound = sfx("Explosion.wav", 0.4) 
@@ -165,7 +176,7 @@ except Exception as e:
     print(f"ERRO NOS ASSETS: {e}")
 
 # --- VARIÁVEIS DE JOGO ---
-Y_HORIZONTE = 960
+Y_HORIZONTE = int(1000 * MULTIPLICADOR_MAPA)
 
 player_rect = pygame.Rect(0, 0, 80, 80) 
 player_rect.center = (Tamanho_mapa // 2, Y_HORIZONTE + (Altura_mapa - Y_HORIZONTE) // 2)
