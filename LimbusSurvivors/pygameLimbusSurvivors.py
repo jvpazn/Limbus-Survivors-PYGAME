@@ -9,7 +9,7 @@ pygame.init()
 pygame.mixer.init()
 
 # Variáveis Globais de Janela
-LARGURA, ALTURA = 1366, 768
+LARGURA, ALTURA = 1600, 900
 screen = pygame.display.set_mode((LARGURA, ALTURA), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 pygame.display.set_caption("Limbus Survivors Beta")
@@ -74,7 +74,7 @@ def carregar_spritesheet_grade(nome_arquivo, colunas, linhas, escala_final=None)
 #MAPA 
 try:
     # Defina aqui quantas vezes quer aumentar o mapa (Ex: 2.0 é o dobro, 1.5 é 50% maior)
-    MULTIPLICADOR_MAPA = 2.0 
+    MULTIPLICADOR_MAPA = 1.5
 
     # Fundo
     tmp_bg = img("Casino.png")
@@ -167,7 +167,7 @@ try:
     music("CasinoTheme.mp3")
     if pygame.mixer.music.get_busy() == False and os.path.exists(os.path.join(BGM_DIR, "CasinoTheme.mp3")):
         pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(0.3)
+        pygame.mixer.music.set_volume(0)
 
     damage_sound = sfx("IshmaelDamage.wav", 0.3)
     explosao_sound = sfx("Explosion.wav", 0.4) 
