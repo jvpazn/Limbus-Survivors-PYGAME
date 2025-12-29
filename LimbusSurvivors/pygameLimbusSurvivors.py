@@ -100,13 +100,29 @@ try:
         Icone_Jogador = pygame.Surface((40, 40))
         Icone_Jogador.fill((0, 0, 255))
 
-    #Inimigo
-    Inimigo_Img = img("Middle_base.png")
-    if not Inimigo_Img:
-        Inimigo_Img = pygame.Surface((128, 128))
-        Inimigo_Img.fill((255, 0, 0)) 
+    #Inimigo Base
+    InimigoBase_Img = img("Middle_base.png")
+    if not InimigoBase_Img:
+        InimigoBase_Img = pygame.Surface((128, 128))
+        InimigoBase_Img.fill((255, 0, 0)) 
     else:
-        Inimigo_Img = pygame.transform.scale(Inimigo_Img, (128, 128))
+        InimigoBase_Img = pygame.transform.scale(InimigoBase_Img, (128, 128))
+
+    #Inimigo Rapido
+    InimigoRapido_Img = img("Middle_Fast.png")
+    if not InimigoRapido_Img:
+        InimigoRapido_Img = pygame.Surface((128, 128))
+        InimigoRapido_Img.fill((255, 0, 0)) 
+    else:
+        InimigoRapido_Img = pygame.transform.scale(InimigoRapido_Img, (128, 128))
+
+    #Inimigo Forte
+    InimigoForte_Img = img("Middle_Strong.png")
+    if not InimigoForte_Img:
+        InimigoForte_Img = pygame.Surface((128, 128))
+        InimigoForte_Img.fill((255, 0, 0)) 
+    else:
+        InimigoForte_Img = pygame.transform.scale(InimigoForte_Img, (128, 128))
 
     #Arma
     Arma_Img = img("IshmaelWeapon.png")
@@ -265,20 +281,27 @@ class Explosao(pygame.sprite.Sprite):
         pos_y = self.rect.centery - camera.y - (self.rect.height // 2)
         surface.blit(self.image, (pos_x, pos_y))
 
-class InimigoBasico:
-    def __init__(self, x, y):
-        self.rect = pygame.Rect(0, 0, 60, 60)
+class InimigoGen(pygame.sprite.Sprite): 
+    def __init__(self, x, y, img, vel, max_hp, xp_drop, dano):
+        super().__init__()
+        self.image = img
+        self.rect = self.image.get_rect()
         self.rect.center = (x, y)
-        self.vel = 3
-        self.max_hp = 10 # Salvei o maximo pra calcular a barra
-        self.hp = self.max_hp 
+        
+        # Status Base
+        self.vel = vel
+        self.max_hp = max_hp
+        self.hp = self.max_hp
+        self.xp_drop = xp_drop
+        self.dano = dano
+
+        # Física
         self.kb_x = 0
         self.kb_y = 0
         self.atrito = 0.9
-        self.xp_drop = 15
 
     def atualizar(self, player_rect, inimigos):
-# Movimento Normal ---
+        # --- Movimento Normal ---
         dx = player_rect.centerx - self.rect.centerx
         dy = player_rect.centery - self.rect.centery
         dist = math.hypot(dx, dy)
@@ -291,19 +314,19 @@ class InimigoBasico:
             move_x = (dx / dist) * self.vel
             move_y = (dy / dist) * self.vel
 
-        #Knockback ---
+        # --- Aplicar Movimento e Knockback ---
         self.rect.x += move_x + self.kb_x
         self.rect.y += move_y + self.kb_y
 
-        # Reduz o knockback
+        # Reduz o knockback (Fricção)
         self.kb_x *= self.atrito
         self.kb_y *= self.atrito
 
-        # Limpa valores muito pequenos para parar processamento desnecessário
+        # Limpa valores muito pequenos
         if abs(self.kb_x) < 0.1: self.kb_x = 0
         if abs(self.kb_y) < 0.1: self.kb_y = 0
 
-        #Empurrão
+        # --- Empurrão entre Inimigos ---
         for outro in inimigos:
             if outro != self:
                 if self.rect.colliderect(outro.rect):
@@ -312,9 +335,11 @@ class InimigoBasico:
                     if self.rect.centery < outro.rect.centery: self.rect.y -= 1
                     else: self.rect.y += 1
 
-        #Colisão Player
+        # --- Colisão Player (Separation) ---
         d_player = math.hypot(self.rect.centerx - player_rect.centerx, 
                             self.rect.centery - player_rect.centery)
+        
+        # Proteção contra divisão por zero e empurrão
         if 0 < d_player < DIST_MIN:
             overlap = DIST_MIN - d_player
             nx = (self.rect.centerx - player_rect.centerx) / d_player
@@ -322,36 +347,54 @@ class InimigoBasico:
             self.rect.centerx += nx * overlap
             self.rect.centery += ny * overlap
 
-        #Limites
+        # --- Limites do Mapa ---
+        self.manter_nos_limites()
+
+    def manter_nos_limites(self):
         if self.rect.top < Y_HORIZONTE: self.rect.top = Y_HORIZONTE
         if self.rect.bottom > Altura_mapa: self.rect.bottom = Altura_mapa
         if self.rect.left < 0: self.rect.left = 0
         if self.rect.right > Tamanho_mapa: self.rect.right = Tamanho_mapa
 
     def desenhar(self, surface, camera):
-        # Desenha a imagem do inimigo
-        pos_x = self.rect.centerx - camera.x - 64
-        pos_y = self.rect.centery - camera.y - 64
-        surface.blit(Inimigo_Img, (pos_x, pos_y))
+        # Desenha o inimigo com deslocamento da câmera
+        pos_x = self.rect.centerx - camera.x - (self.rect.width // 2)
+        pos_y = self.rect.centery - camera.y - (self.rect.height // 2)
+        surface.blit(self.image, (pos_x, pos_y))
         
-        # --- DESENHO DA BARRA DE VIDA DO INIMIGO ---
-        if self.hp < self.max_hp: # Só desenha se tomou dano
+        self.desenhar_barra_vida(surface, camera)
+
+    def desenhar_barra_vida(self, surface, camera):
+        if self.hp < self.max_hp:
             largura_barra = 60
             altura_barra = 5
-            padding_y = 10 # Distância acima da cabeça
+            padding_y = 10 
             
             pos_barra_x = self.rect.centerx - camera.x - (largura_barra // 2)
             pos_barra_y = self.rect.top - camera.y - padding_y
             
-            # Fundo da barra
+            # Fundo
             pygame.draw.rect(surface, CINZA_ESCURO, (pos_barra_x, pos_barra_y, largura_barra, altura_barra))
             
-            # Vida atual
-            porcentagem_vida = self.hp / self.max_hp
-            largura_atual = int(largura_barra * porcentagem_vida)
+            # Vida
+            porcentagem = self.hp / self.max_hp
+            largura_atual = int(largura_barra * porcentagem)
             if largura_atual > 0:
                 pygame.draw.rect(surface, VERMELHO, (pos_barra_x, pos_barra_y, largura_atual, altura_barra))
 
+# --- FILHOS INIMIGOGEN
+
+class InimigoBasico(InimigoGen):
+    def __init__(self, x, y):
+        super().__init__(x, y, img=InimigoBase_Img, vel=3, max_hp=10, xp_drop=15, dano = 1)
+
+class InimigoRapido(InimigoGen):
+    def __init__(self, x, y):
+        super().__init__(x, y, img=InimigoRapido_Img, vel=5.5, max_hp=5, xp_drop=6, dano = 1)
+
+class InimigoForte(InimigoGen):
+    def __init__(self, x, y):
+        super().__init__(x, y, img=InimigoForte_Img, vel=2.5, max_hp = 20, xp_drop=25, dano = 2)
 # --- UI ---
 def desenhar_vida(superficie, x, y, vida_atual, vida_maxima, icone):
     tamanho_quadrado = 20
@@ -464,7 +507,13 @@ while running:
         x = random.randint(100, Tamanho_mapa - 100)
         y = random.randint(Y_HORIZONTE, Altura_mapa - 100)
         if math.hypot(x - player_rect.centerx, y - player_rect.centery) > 500:
-            lista_inimigos.append(InimigoBasico(x, y))
+            iniBas = InimigoBasico(x, y)
+            iniRap = InimigoRapido(x, y)
+            iniFor = InimigoForte(x, y)
+
+            inimigosSpawn = [iniBas, iniRap, iniFor]
+
+            lista_inimigos.append(random.choice(inimigosSpawn))
             spawn_timer = 0
 
     # Atualizações
@@ -477,7 +526,7 @@ while running:
         if not ativa:
             lista_explosoes.remove(explosao)
         else:
-            # Usamos uma cópia da lista [:] para poder remover inimigos sem bugar o loop
+            #cópia da lista [:] para poder remover inimigos sem bugar o loop
             for inimigo in lista_inimigos[:]:
                 if explosao.rect.colliderect(inimigo.rect):
                     if inimigo not in explosao.atingidos:
@@ -517,7 +566,7 @@ while running:
         
         if distancia < (DIST_MIN + 5) and not invulneravel:
             if damage_sound: damage_sound.play()
-            player_hp -= 1
+            player_hp -= inimigo.dano
             invulneravel = True
             timer_invulneravel = tempo_atual
             
@@ -597,10 +646,6 @@ while running:
 
     # UI
     desenhar_vida(screen, 20, 20, player_hp, playerMax_hp, Icone_Jogador)
-
-    txt = font.render(f"Inimigos: {len(lista_inimigos)}", True, "white")
-    txt_rect = txt.get_rect(center=(LARGURA // 2, 30))
-    screen.blit(txt, txt_rect)
     
     txt_lvl = font.render(f"LVL: {Level} | XP: {int(xp)}/{xp_passar_nivel}", True, "yellow")
     screen.blit(txt_lvl, (20, 80))
