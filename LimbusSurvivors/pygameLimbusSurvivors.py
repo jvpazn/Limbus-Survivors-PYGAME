@@ -9,7 +9,7 @@ pygame.init()
 pygame.mixer.init()
 
 # Variáveis Globais de Janela
-LARGURA, ALTURA = 1600, 900
+LARGURA, ALTURA = 1080, 720
 screen = pygame.display.set_mode((LARGURA, ALTURA), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 pygame.display.set_caption("Limbus Survivors Beta")
@@ -186,7 +186,7 @@ lista_inimigos = []
 lista_explosoes = [] 
 
 spawn_timer = 0
-SPAWN_COOLDOWN = 180 
+SPAWN_COOLDOWN = 90 
 LIMITE_INIMIGOS = 15
 
 # Status Player
@@ -206,54 +206,177 @@ ultimo_ataque = 0
 espelhado = False 
 Level = 1
 xp = 0
-xp_passar_nivel = 130
-
-def passar_nivel(LevelAtual, xpNivel, xpAtual):
-    while xpAtual >= xpNivel:
-        LevelAtual += 1
-        xpAtual = xpAtual - xpNivel
-        xpNivel = int(xpNivel * 1.15)
-    else:
-        pass
-    return LevelAtual, xpNivel, xpAtual
-
+xp_passar_nivel = 70
 
 # E.G.O Gifts
 
 grade_fixerHaving = False
-# Se grade_fixerHaving For TRUE automaticamente grade_fixerLevel tem que ser 1 ou mais
+# Se grade_fixerHaving For TRUE automaticamente grade_fixerLevel tem que ser 1 ou mais (APLICA A O RESTO)
 grade_fixerLevel = 0
 
 def GradeFixerEGO(Having, level):
     global dano, COOLDOWN_ARMA, velocidade_player, INVULNERAVEL_TEMPO
     if Having == True:
         if level == 1:
-            dano = danoBase * 1.02
-            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.98
-            velocidade_player = velocidade_playerBase * 1.02
-            INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.02
-        if level == 2:
-            dano = danoBase * 1.05
-            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.95
-            velocidade_player = velocidade_playerBase * 1.05
-            INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.05
-        if level == 3:
-            dano = danoBase * 1.07
-            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.93
-            velocidade_player = velocidade_playerBase * 1.07
-            INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.07
-        if level == 4:
             dano = danoBase * 1.10
             COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.90
             velocidade_player = velocidade_playerBase * 1.10
             INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.10
+        if level == 2:
+            dano = danoBase * 1.20
+            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.80
+            velocidade_player = velocidade_playerBase * 1.20
+            INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.20
+        if level == 3:
+            dano = danoBase * 1.35
+            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.65
+            velocidade_player = velocidade_playerBase * 1.35
+            INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.35
+        if level == 4:
+            dano = danoBase * 1.50
+            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.50
+            velocidade_player = velocidade_playerBase * 1.50
+            INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.50
         if level == 5:
-            dano = danoBase * 1.15
-            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.85
-            velocidade_player = velocidade_playerBase * 1.15
-            INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.15
+            dano = danoBase * 2.50
+            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.50
+            velocidade_player = velocidade_playerBase * 1.50
+            INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.50
     else:
         pass
+
+# PLACEHOLDER
+
+thirteethToolHAVING = False
+thirteethToolLevel = 0
+
+DaCapoHAVING = False
+DaCapoLevel = 0
+
+MimicryHAVING = False
+MimicryLevel = 0 
+
+CoinHAVING = False 
+CoinLevel = 0
+
+dFoxHAVING = False
+dFoxLevel = 0
+
+SheepHAVING = False 
+SheepLevel = 0
+
+kkomiHAVING = False 
+kkomiLEVEL = 0
+
+def menu_levelup_terminal():
+    global grade_fixerHaving, grade_fixerLevel
+    global thirteethToolHAVING, thirteethToolLevel
+    global DaCapoHAVING, DaCapoLevel
+    global MimicryHAVING, MimicryLevel
+    global CoinHAVING, CoinLevel
+    global dFoxHAVING, dFoxLevel
+    global SheepHAVING, SheepLevel
+    global kkomiHAVING, kkomiLEVEL
+    global player_hp, playerMax_hp
+
+    opcoes_validas = []
+
+    # --- VERIFICAÇÃO DE NÍVEL MÁXIMO (5) ---
+
+    if grade_fixerLevel < 5:
+        opcoes_validas.append({"nome": "Grade Fixer", "desc": "+Atributos Gerais", "id": "grade_fixer", "lvl_atual": grade_fixerLevel})
+
+    if thirteethToolLevel < 5:
+        opcoes_validas.append({"nome": "13th Tool", "desc": "+++Dano Massivo", "id": "13th", "lvl_atual": thirteethToolLevel})
+
+    if DaCapoLevel < 5:
+        opcoes_validas.append({"nome": "Da Capo", "desc": "+++Velocidade Ataque", "id": "dacapo", "lvl_atual": DaCapoLevel})
+
+    if MimicryLevel < 5:
+        opcoes_validas.append({"nome": "Mimicry", "desc": "+++Vida Máxima", "id": "mimicry", "lvl_atual": MimicryLevel})
+
+    if CoinLevel < 5:
+        opcoes_validas.append({"nome": "Coin", "desc": "+Dano e +Velocidade", "id": "coin", "lvl_atual": CoinLevel})
+
+    if dFoxLevel < 5:
+        opcoes_validas.append({"nome": "Drifting Fox", "desc": "+++Invulnerabilidade", "id": "dfox", "lvl_atual": dFoxLevel})
+
+    if SheepLevel < 5:
+        opcoes_validas.append({"nome": "Sheep", "desc": "+Vida e +Invulnerável", "id": "sheep", "lvl_atual": SheepLevel})
+
+    if kkomiLEVEL < 5:
+        opcoes_validas.append({"nome": "Kkomi", "desc": "+++Speed Movimento", "id": "kkomi", "lvl_atual": kkomiLEVEL})
+
+
+    print("\n" + "="*50)
+    print(f"      LEVEL UP! - ESCOLHA UM E.G.O GIFT")
+    print("="*50)
+
+    # --- PROTEÇÃO CONTRA LISTA VAZIA ---
+    if len(opcoes_validas) == 0:
+        print(">> LIMIT BREAK! Todos os E.G.Os estão no máximo! <<")
+        print(">> Recompensa: Vida Totalmente Restaurada! <<")
+        player_hp = playerMax_hp
+        input("Pressione Enter para continuar...")
+        return # Sai da função
+
+    quantidade = min(3, len(opcoes_validas))
+    opcoes_sorteadas = random.sample(opcoes_validas, quantidade)
+
+    for i, opcao in enumerate(opcoes_sorteadas):
+        print(f"[{i+1}] {opcao['nome']:<15} (Lvl {opcao['lvl_atual']}->{opcao['lvl_atual']+1}) : {opcao['desc']}")
+
+        
+    print("="*50)
+    
+    escolha_valida = False
+    while not escolha_valida:
+        try:
+            entrada = input(f"Digite o número (1-{len(opcoes_sorteadas)}): ")
+            escolha = int(entrada)
+            
+            if 1 <= escolha <= len(opcoes_validas):
+                item = opcoes_sorteadas[escolha-1]
+                print(f"Você escolheu: >> {item['nome']} <<")
+                
+                if item['id'] == "grade_fixer":
+                    grade_fixerHaving = True
+                    grade_fixerLevel += 1
+                    
+                elif item['id'] == "13th":
+                    thirteethToolHAVING = True
+                    thirteethToolLevel += 1
+
+                elif item['id'] == "dacapo":
+                    DaCapoHAVING = True
+                    DaCapoLevel += 1
+
+                elif item['id'] == "mimicry":
+                    MimicryHAVING = True
+                    MimicryLevel += 1
+                    
+                elif item['id'] == "coin":
+                    CoinHAVING = True
+                    CoinLevel += 1
+
+                elif item['id'] == "dfox":
+                    dFoxHAVING = True
+                    dFoxLevel += 1
+
+                elif item['id'] == "sheep":
+                    SheepHAVING = True
+                    SheepLevel += 1
+
+                elif item['id'] == "kkomi":
+                    kkomiHAVING = True
+                    kkomiLEVEL += 1
+                
+                escolha_valida = True
+            else:
+                print("Número inválido.")
+        except ValueError:
+            print("Digite apenas o número.")
+    GradeFixerEGO(grade_fixerHaving, grade_fixerLevel)
 
 
 # Cores
@@ -261,7 +384,7 @@ VERMELHO = (220, 20, 60)
 CINZA_ESCURO = (50, 50, 50)
 CINZA_CLARO = (100, 100, 100)
 BRANCO = (255, 255, 255)
-CIANO = (0, 255, 255) # Cor da barra de recarga
+CIANO = (0, 255, 255) 
 
 # --- CLASSES ---
 class Explosao(pygame.sprite.Sprite):
@@ -291,6 +414,8 @@ class Explosao(pygame.sprite.Sprite):
         pos_x = self.rect.centerx - camera.x - (self.rect.width // 2)
         pos_y = self.rect.centery - camera.y - (self.rect.height // 2)
         surface.blit(self.image, (pos_x, pos_y))
+
+# -- CLASSES INIMIGOS --
 
 class InimigoGen(pygame.sprite.Sprite): 
     def __init__(self, x, y, img, vel, max_hp, xp_drop, dano):
@@ -406,31 +531,80 @@ class InimigoRapido(InimigoGen):
 class InimigoForte(InimigoGen):
     def __init__(self, x, y):
         super().__init__(x, y, img=InimigoForte_Img, vel=2.5, max_hp = 20, xp_drop=25, dano = 2)
+
+# --- Selecionar inimigos ---
+
+def escolher_inimigo_por_nivel(nivel, x, y):
+    classes_inimigos = [InimigoBasico, InimigoRapido, InimigoForte]
+
+    if nivel < 3:
+        # Nível 1 e 2: 100% Básico
+        pesos = [80, 20, 0]
+        
+    elif nivel < 6:
+        pesos = [60, 30, 10]
+        
+    elif nivel < 10:
+        pesos = [10, 40, 50]
+        
+    else:
+        pesos = [0, 10, 90]
+
+    ClasseSorteada = random.choices(classes_inimigos, weights=pesos, k=1)[0]
+    
+    return ClasseSorteada(x, y)
+
 # --- UI ---
+
 def desenhar_vida(superficie, x, y, vida_atual, vida_maxima, icone):
-    tamanho_quadrado = 20
+    largura_barra_total = 200  
+    altura_barra = 20          
     tamanho_icone = 40
     padding = 10
     
     icone_scale = pygame.transform.scale(icone, (tamanho_icone, tamanho_icone))
-    offset_y_barra = (tamanho_icone - tamanho_quadrado) // 2
-    
+    offset_y_barra = (tamanho_icone - altura_barra) // 2 
     superficie.blit(icone_scale, (x, y))
 
     inicio_barra_x = x + tamanho_icone + padding
     pos_y_barra = y + offset_y_barra
 
-    for i in range(vida_maxima):
-        pos_x = inicio_barra_x + (tamanho_quadrado) * i
-        rect = (pos_x, pos_y_barra, tamanho_quadrado, tamanho_quadrado)
-        if i < vida_atual:
-            pygame.draw.rect(superficie, VERMELHO, rect) 
-        else:
-            pygame.draw.rect(superficie, CINZA_ESCURO, rect) 
+    rect_fundo = (inicio_barra_x, pos_y_barra, largura_barra_total, altura_barra)
+    pygame.draw.rect(superficie, CINZA_ESCURO, rect_fundo)
 
-    largura_total = (tamanho_quadrado * vida_maxima)
-    rect_borda = (inicio_barra_x, pos_y_barra, largura_total, tamanho_quadrado)
-    pygame.draw.rect(superficie, BRANCO, rect_borda, 2)
+    if vida_maxima > 0:
+        porcentagem = vida_atual / vida_maxima
+        porcentagem = max(0, min(porcentagem, 1)) 
+        
+        largura_atual = int(largura_barra_total * porcentagem)
+
+        if largura_atual > 0:
+            rect_vida = (inicio_barra_x, pos_y_barra, largura_atual, altura_barra)
+            pygame.draw.rect(superficie, VERMELHO, rect_vida)
+
+    pygame.draw.rect(superficie, BRANCO, rect_fundo, 2)
+
+def desenhar_barra_xp(superficie, x, y, largura, altura, xp_atual, xp_max, nivel):
+    pygame.draw.rect(superficie, (50, 50, 50), (x, y, largura, altura))
+    
+    if xp_max > 0:
+        pct = xp_atual / xp_max
+        largura_fill = int(largura * pct)
+        
+        if largura_fill > largura: 
+            largura_fill = largura
+
+        pygame.draw.rect(superficie, (0, 120, 200), (x, y, largura_fill, altura))
+    
+    font_xp = pygame.font.Font(None, 36)
+    texto = font_xp.render(f"{xp_atual}/{xp_passar_nivel}", True, (255, 255, 255))
+    rect_texto = texto.get_rect(center=(x + largura/2, y + altura/2))
+    superficie.blit(texto, rect_texto)
+
+largura_xp = LARGURA
+altura_xp = 30
+pos_x_xp = (LARGURA - largura_xp) // 2 
+pos_y_xp = 0
 
 # Constantes de Colisão
 RAIO_PLAYER = 45
@@ -518,13 +692,9 @@ while running:
         x = random.randint(100, Tamanho_mapa - 100)
         y = random.randint(Y_HORIZONTE, Altura_mapa - 100)
         if math.hypot(x - player_rect.centerx, y - player_rect.centery) > 500:
-            iniBas = InimigoBasico(x, y)
-            iniRap = InimigoRapido(x, y)
-            iniFor = InimigoForte(x, y)
+            novo_inimigo = escolher_inimigo_por_nivel(Level, x, y)
 
-            inimigosSpawn = [iniBas, iniRap, iniFor]
-
-            lista_inimigos.append(random.choice(inimigosSpawn))
+            lista_inimigos.append(novo_inimigo)
             spawn_timer = 0
 
     # Atualizações
@@ -586,8 +756,21 @@ while running:
         running = False 
 
     #Upar de nivel, etc
-    Level, xp_passar_nivel, xp = passar_nivel(Level, xp_passar_nivel, xp)
-    GradeFixerEGO(grade_fixerHaving, grade_fixerLevel)
+    while xp >= xp_passar_nivel:
+        Level += 1
+        xp -= xp_passar_nivel
+        xp_passar_nivel = int(xp_passar_nivel * 1.45)
+        
+
+        screen.fill("black")
+        screen.blit(Background_Img, (-camera.x, -camera.y))
+        txt_pause = font.render("ESCOLHA NO TERMINAL...", True, "white")
+        screen.blit(txt_pause, (LARGURA//2 - 200, ALTURA//2))
+        pygame.display.flip()
+        
+        menu_levelup_terminal()
+        
+        clock.tick() 
 
     # Câmera
     camera.center = player_rect.center
@@ -656,14 +839,13 @@ while running:
         screen.blit(arma_rotacionada, (rect_arma.x - camera.x, rect_arma.y - camera.y))
 
     # UI
-    desenhar_vida(screen, 20, 20, player_hp, playerMax_hp, Icone_Jogador)
+    desenhar_vida(screen, 20, 50, player_hp, playerMax_hp, Icone_Jogador)
     
-    txt_lvl = font.render(f"LVL: {Level} | XP: {int(xp)}/{xp_passar_nivel}", True, "yellow")
-    screen.blit(txt_lvl, (20, 80))
+    desenhar_barra_xp(screen, pos_x_xp, pos_y_xp, largura_xp, altura_xp, xp, xp_passar_nivel, Level)
 
     fps_atual = int(clock.get_fps()) 
     txt_fps = font.render(f"FPS: {fps_atual}", True, "green") 
-    screen.blit(txt_fps, (LARGURA - 150, 20))
+    screen.blit(txt_fps, (LARGURA - 150, 50))
 
     pygame.display.flip()
     clock.tick(60)
