@@ -594,17 +594,7 @@ def desenhar_barra_xp(superficie, x, y, largura, altura, xp_atual, xp_max, nivel
         if largura_fill > largura: 
             largura_fill = largura
 
-        pygame.draw.rect(superficie, (0, 120, 200), (x, y, largura_fill, altura))
-    
-    font_xp = pygame.font.Font(None, 36)
-    texto = font_xp.render(f"{xp_atual}/{xp_passar_nivel}", True, (255, 255, 255))
-    rect_texto = texto.get_rect(center=(x + largura/2, y + altura/2))
-    superficie.blit(texto, rect_texto)
-
-largura_xp = LARGURA
-altura_xp = 30
-pos_x_xp = (LARGURA - largura_xp) // 2 
-pos_y_xp = 0
+        pygame.draw.rect(superficie, (61, 236, 155), (x, y, largura_fill, altura))
 
 # Constantes de Colisão
 RAIO_PLAYER = 45
@@ -816,7 +806,7 @@ while running:
             # Fundo Cinza Claro
             pygame.draw.rect(screen, CINZA_CLARO, (pos_barra_x, pos_barra_y, largura_barra, altura_barra))
             
-            # Progresso Ciano
+            # Ciano
             largura_atual = int(largura_barra * porcentagem)
             if largura_atual > 0:
                 pygame.draw.rect(screen, BRANCO, (pos_barra_x, pos_barra_y, largura_atual, altura_barra))
@@ -840,8 +830,8 @@ while running:
 
     # UI
     desenhar_vida(screen, 20, 50, player_hp, playerMax_hp, Icone_Jogador)
-    
-    desenhar_barra_xp(screen, pos_x_xp, pos_y_xp, largura_xp, altura_xp, xp, xp_passar_nivel, Level)
+
+    desenhar_barra_xp(screen, 0, 0, LARGURA, 30, xp, xp_passar_nivel, Level)
 
     fps_atual = int(clock.get_fps()) 
     txt_fps = font.render(f"FPS: {fps_atual}", True, "green") 
