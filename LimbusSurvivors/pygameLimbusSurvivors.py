@@ -193,9 +193,11 @@ LIMITE_INIMIGOS = 15
 playerMax_hp = 10
 player_hp = 10          
 invulneravel = False    
+invuln_dash = False
 timer_invulneravel = 0 
 INVULNERAVEL_TEMPOBase = 1500  
-INVULNERAVEL_TEMPO = 1500  
+INVULNERAVEL_TEMPO = 1500
+INVULNERAVEL_DASH = 500  
 velocidade_playerBase = 6
 velocidade_player = 6
 danoBase = 3
@@ -245,6 +247,58 @@ def GradeFixerEGO(Having, level):
     else:
         pass
 
+dFoxHAVING = True
+dFoxLevel = 1
+is_dashing = False
+ultimo_dash = -9999
+dash_vector = (0, 0)
+
+def DrifingFox(Having, Level, keys):
+    global is_dashing, ultimo_dash, dash_vector, invulneravel, timer_invulneravel, INVULNERAVEL_DASH, invuln_dash
+    
+    agora = pygame.time.get_ticks()
+
+    if not Having:
+        return 0, 0, False
+
+    cooldown_base = 1500 
+    velocidade_dash = 20
+    if Level > 1:
+        cooldown_base = 1500 - ((Level - 1) * 250)
+        velocidade_dash = 20 + ((Level - 1) * 2.5) 
+    duracao_dash = 200
+
+    if keys[K_SPACE] and not is_dashing and (agora - ultimo_dash > cooldown_base):
+        
+        dx_dash, dy_dash = 0, 0
+        if keys[K_UP] or keys[K_w]:    dy_dash -= 1
+        if keys[K_DOWN] or keys[K_s]:  dy_dash += 1
+        if keys[K_LEFT] or keys[K_a]:  dx_dash -= 1
+        if keys[K_RIGHT] or keys[K_d]: dx_dash += 1
+
+        if dx_dash != 0 or dy_dash != 0:
+            norm = math.hypot(dx_dash, dy_dash)
+            dx_dash /= norm
+            dy_dash /= norm
+            
+            is_dashing = True
+            ultimo_dash = agora
+            dash_vector = (dx_dash, dy_dash)
+            
+            invulneravel = True
+            invuln_dash = True
+            timer_invulneravel = agora
+
+    if is_dashing:
+        if agora - ultimo_dash < duracao_dash:
+            move_x = dash_vector[0] * velocidade_dash
+            move_y = dash_vector[1] * velocidade_dash
+            return move_x, move_y, True 
+        else:
+            is_dashing = False
+
+    return 0, 0, False
+
 # PLACEHOLDER
 
 thirteethToolHAVING = False
@@ -258,9 +312,6 @@ MimicryLevel = 0
 
 CoinHAVING = False 
 CoinLevel = 0
-
-dFoxHAVING = False
-dFoxLevel = 0
 
 SheepHAVING = False 
 SheepLevel = 0
@@ -377,7 +428,6 @@ def menu_levelup_terminal():
         except ValueError:
             print("Digite apenas o número.")
     GradeFixerEGO(grade_fixerHaving, grade_fixerLevel)
-
 
 # Cores
 VERMELHO = (220, 20, 60) 
@@ -661,15 +711,21 @@ while running:
     
     #Movimento Jogador
     dx, dy = 0, 0
-    if keys[K_UP] or keys[K_w]:    dy -= velocidade_player
-    if keys[K_DOWN] or keys[K_s]:  dy += velocidade_player
-    if keys[K_LEFT] or keys[K_a]:  dx -= velocidade_player
-    if keys[K_RIGHT] or keys[K_d]: dx += velocidade_player
 
+    fox_dx, fox_dy, fox_active = DrifingFox(dFoxHAVING, dFoxLevel, keys)
 
-    if dx != 0 and dy != 0:
-        dx *= 0.707
-        dy *= 0.707
+    if fox_active:
+        dx = fox_dx
+        dy = fox_dy
+    else:
+        if keys[K_UP] or keys[K_w]:    dy -= velocidade_player
+        if keys[K_DOWN] or keys[K_s]:  dy += velocidade_player
+        if keys[K_LEFT] or keys[K_a]:  dx -= velocidade_player
+        if keys[K_RIGHT] or keys[K_d]: dx += velocidade_player
+
+        if dx != 0 and dy != 0:
+            dx *= 0.707
+            dy *= 0.707
 
     player_rect.x += dx
     player_rect.y += dy
@@ -727,8 +783,15 @@ while running:
                                 xp += inimigo.xp_drop
 
     # Colisão Inimigo -> Player
-    if invulneravel and tempo_atual - timer_invulneravel >= INVULNERAVEL_TEMPO:
-        invulneravel = False
+    if invulneravel:
+        if invuln_dash:
+            if tempo_atual - timer_invulneravel >= INVULNERAVEL_DASH:
+                invulneravel = False
+                invuln_dash = False
+        else:
+            if tempo_atual - timer_invulneravel >= INVULNERAVEL_TEMPO:
+                invulneravel = False
+
 
     for inimigo in lista_inimigos:
         dx = player_rect.centerx - inimigo.rect.centerx
@@ -739,6 +802,7 @@ while running:
             if damage_sound: damage_sound.play()
             player_hp -= inimigo.dano
             invulneravel = True
+            invuln_dash = False
             timer_invulneravel = tempo_atual
             
     if player_hp <= 0:
