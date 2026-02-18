@@ -164,10 +164,12 @@ try:
     img_icone = img("Icon.png")
     if img_icone: pygame.display.set_icon(img_icone)
     
+    Volume_Alteravel = 0.05
+    Volume_Pause = 0.01
     music("CasinoTheme.mp3")
     if pygame.mixer.music.get_busy() == False and os.path.exists(os.path.join(BGM_DIR, "CasinoTheme.mp3")):
         pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(0.05)
+        pygame.mixer.music.set_volume(Volume_Alteravel)
 
     damage_sound = sfx("IshmaelDamage.wav", 0.3)
     explosao_sound = sfx("Explosion.wav", 0.4) 
@@ -202,7 +204,8 @@ INVULNERAVEL_DASH = 500
 velocidade_playerBase = 6
 velocidade_player = 6
 danoBase = 3
-dano = 3
+multiplicador_dano_global = 1.0      
+multiplicador_dano_temporario = 1.0 
 COOLDOWN_ARMA_BASE = 1500
 COOLDOWN_ARMA = 1500
 ultimo_ataque = 0 
@@ -211,42 +214,46 @@ Level = 1
 xp = 0
 xp_passar_nivel = 70
 
-# E.G.O Gifts
+# NOVA FUNÇÃO : CALCULAR DANO COM NOVOS MULTIPLICADORES
+def calcular_dano():
+    return danoBase * multiplicador_dano_global * multiplicador_dano_temporario
 
+# E.G.O Gifts
 grade_fixerHaving = False
 # Se grade_fixerHaving For TRUE automaticamente grade_fixerLevel tem que ser 1 ou mais (APLICA A O RESTO)
 grade_fixerLevel = 0
 
 def GradeFixerEGO(Having, level):
-    global dano, COOLDOWN_ARMA, velocidade_player, INVULNERAVEL_TEMPO
-    if Having == True:
+    global multiplicador_dano_global
+    global COOLDOWN_ARMA, velocidade_player, INVULNERAVEL_TEMPO
+
+    if Having:
         if level == 1:
-            dano = danoBase * 1.10
+            multiplicador_dano_global = 1.10
             COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.90
             velocidade_player = velocidade_playerBase * 1.10
             INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.10
-        if level == 2:
-            dano = danoBase * 1.20
+        elif level == 2:
+            multiplicador_dano_global = 1.20
             COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.80
             velocidade_player = velocidade_playerBase * 1.20
             INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.20
-        if level == 3:
-            dano = danoBase * 1.35
+        elif level == 3:
+            multiplicador_dano_global = 1.35
             COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.65
             velocidade_player = velocidade_playerBase * 1.35
             INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.35
-        if level == 4:
-            dano = danoBase * 1.50
+        elif level == 4:
+            multiplicador_dano_global = 1.50
             COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.50
             velocidade_player = velocidade_playerBase * 1.50
             INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.50
-        if level == 5:
-            dano = danoBase * 2.50
+        elif level == 5:
+            multiplicador_dano_global = 2.50
             COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.50
             velocidade_player = velocidade_playerBase * 1.50
             INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.50
-    else:
-        pass
+
 
 dFoxHAVING = False
 dFoxLevel = 0
@@ -310,26 +317,32 @@ buff_cooldown_restante = 0
 
 
 def thirteenthTool(Having, Level, event):
-    global dano, COOLDOWN_ARMA, COOLDOWN_ARMA_BASE, lista_inimigos
+    global multiplicador_dano_temporario
+    global COOLDOWN_ARMA, COOLDOWN_ARMA_BASE, lista_inimigos
     global contagem_13th, buff_cooldown_restante
 
     if not Having or Level == 0:
         return
 
     if event.type == MOUSEBUTTONDOWN and event.button == 1:
-        if dano != danoBase:
-            dano = danoBase
+
+        # Sempre reseta o buff temporário
+        multiplicador_dano_temporario = 1.0
 
         contagem_13th += 1
         print(f"Contagem 13th Tool: {contagem_13th}")
 
         if contagem_13th == 13:
-            dano = danoBase * 2
-            if thirteenthTool_sound: thirteenthTool_sound.play()
-            
+
+            # Apenas aplica multiplicador temporário
+            multiplicador_dano_temporario = 2.0
+
+            if thirteenthTool_sound:
+                thirteenthTool_sound.play()
+
             if Level == 5:
                 for inimigo in lista_inimigos:
-                    inimigo.vel = inimigo.vel * 0.7
+                    inimigo.vel *= 0.7
 
             if Level == 2:
                 buff_cooldown_restante = 6
@@ -337,18 +350,20 @@ def thirteenthTool(Having, Level, event):
             elif Level == 3:
                 buff_cooldown_restante = 8
                 COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.60
-            elif Level == 4 or Level == 5 :
+            elif Level >= 4:
                 buff_cooldown_restante = 8
                 COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.40
 
         if contagem_13th > 13:
             contagem_13th = 1
-        
+
         if buff_cooldown_restante > 0:
             buff_cooldown_restante -= 1
 
             if buff_cooldown_restante == 0:
                 COOLDOWN_ARMA = COOLDOWN_ARMA_BASE
+                multiplicador_dano_temporario = 1.0
+
 
 
             
@@ -719,10 +734,47 @@ DIST_MIN = RAIO_PLAYER + RAIO_INIMIGO
 
 font = pygame.font.Font(None, 48)
 
+# Pause
+pausado = False
+botao_voltar = None
+botao_sair = None
+
+def desenhar_menu_pause(screen, largura, altura):
+    overlay = pygame.Surface((largura, altura))
+    overlay.set_alpha(180)
+    overlay.fill((0, 0, 0))
+    screen.blit(overlay, (0, 0))
+
+    titulo = font.render("JOGO PAUSADO", True, BRANCO)
+    screen.blit(titulo, (largura//2 - titulo.get_width()//2, altura//2 - 150))
+
+    botao_voltar = pygame.Rect(largura//2 - 150, altura//2 - 40, 300, 60)
+    botao_sair = pygame.Rect(largura//2 - 150, altura//2 + 40, 300, 60)
+
+    mouse = pygame.mouse.get_pos()
+
+    cor_voltar = (150,150,150) if botao_voltar.collidepoint(mouse) else CINZA_CLARO
+    cor_sair = (150,150,150) if botao_sair.collidepoint(mouse) else CINZA_CLARO
+
+    pygame.draw.rect(screen, cor_voltar, botao_voltar)
+    pygame.draw.rect(screen, cor_sair, botao_sair)
+
+    txt_voltar = font.render("Voltar ao Jogo", True, BRANCO)
+    txt_sair = font.render("Sair do Jogo", True, BRANCO)
+
+    screen.blit(txt_voltar, (botao_voltar.centerx - txt_voltar.get_width()//2,
+                            botao_voltar.centery - txt_voltar.get_height()//2))
+
+    screen.blit(txt_sair, (botao_sair.centerx - txt_sair.get_width()//2,
+                            botao_sair.centery - txt_sair.get_height()//2))
+
+    return botao_voltar, botao_sair
+
 # --- LOOP PRINCIPAL ---
 running = True
 while running:
     tempo_atual = pygame.time.get_ticks()
+    keys = pygame.key.get_pressed() #CHaves
 
     # --- CÁLCULO DE VETORES ---
     mx, my = pygame.mouse.get_pos()
@@ -739,18 +791,29 @@ while running:
         espelhado = True
     else:
         espelhado = False
+        
 
     # --- EVENTOS ---
     for event in pygame.event.get():
         if event.type == QUIT:
             running = False
+
         if event.type == VIDEORESIZE:
             LARGURA, ALTURA = event.w, event.h
             screen = pygame.display.set_mode((LARGURA, ALTURA), RESIZABLE)
             camera.width, camera.height = LARGURA, ALTURA
         
+
+        if pausado and botao_voltar and botao_sair:
+            if event.type == MOUSEBUTTONDOWN:
+                if botao_voltar.collidepoint(event.pos):
+                    pausado = False
+                    pygame.mixer.music.set_volume(Volume_Alteravel)
+                if botao_sair.collidepoint(event.pos):
+                    running = False
+
         # --- SISTEMA DE COMBATE (CLIQUE COM TIMER) ---
-        if event.type == MOUSEBUTTONDOWN:
+        if not pausado and event.type == MOUSEBUTTONDOWN:
             if event.button == 1: # Botão Esquerdo
                 
                 agora = pygame.time.get_ticks()
@@ -774,11 +837,21 @@ while running:
 
                     if explosao_sound:
                         explosao_sound.play()
+                        
+        if event.type == KEYDOWN:
+            if event.key == K_ESCAPE:
+                pausado = not pausado
+            if pausado:
+                pygame.mixer.music.set_volume(Volume_Pause)
+            else:
+                pygame.mixer.music.set_volume(Volume_Alteravel)
 
+    if pausado:
+        botao_voltar, botao_sair = desenhar_menu_pause(screen, LARGURA, ALTURA)
+        pygame.display.flip()
+        clock.tick(60)
+        continue
 
-    keys = pygame.key.get_pressed()
-    if keys[K_ESCAPE]: running = False
-    
     #Movimento Jogador
     dx, dy = 0, 0
 
@@ -843,7 +916,7 @@ while running:
 
                     # 2. DANO - Acontece apenas SE o inimigo ainda não foi atingido por ESSA explosão
                     if inimigo not in explosao.atingidos:
-                        inimigo.hp -= dano          
+                        inimigo.hp -= calcular_dano()          
                         explosao.atingidos.append(inimigo) 
                         
                         # 3. MORTE
