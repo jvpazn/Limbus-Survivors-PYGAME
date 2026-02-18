@@ -167,10 +167,11 @@ try:
     music("CasinoTheme.mp3")
     if pygame.mixer.music.get_busy() == False and os.path.exists(os.path.join(BGM_DIR, "CasinoTheme.mp3")):
         pygame.mixer.music.play(-1)
-        pygame.mixer.music.set_volume(0)
+        pygame.mixer.music.set_volume(0.05)
 
     damage_sound = sfx("IshmaelDamage.wav", 0.3)
     explosao_sound = sfx("Explosion.wav", 0.4) 
+    thirteenthTool_sound = sfx("13thToolSFX2.mp3", 0.1)
 
 except Exception as e:
     print(f"ERRO NOS ASSETS: {e}")
@@ -247,8 +248,8 @@ def GradeFixerEGO(Having, level):
     else:
         pass
 
-dFoxHAVING = True
-dFoxLevel = 1
+dFoxHAVING = False
+dFoxLevel = 0
 is_dashing = False
 ultimo_dash = -9999
 dash_vector = (0, 0)
@@ -301,8 +302,58 @@ def DrifingFox(Having, Level, keys):
 
 # PLACEHOLDER
 
-thirteethToolHAVING = False
-thirteethToolLevel = 0
+thirteenthToolHAVING = False
+thirteenthToolLevel = 0
+
+contagem_13th = 0          
+buff_cooldown_restante = 0  
+
+
+def thirteenthTool(Having, Level, event):
+    global dano, COOLDOWN_ARMA, COOLDOWN_ARMA_BASE, lista_inimigos
+    global contagem_13th, buff_cooldown_restante
+
+    if not Having or Level == 0:
+        return
+
+    if event.type == MOUSEBUTTONDOWN and event.button == 1:
+        if dano != danoBase:
+            dano = danoBase
+
+        contagem_13th += 1
+        print(f"Contagem 13th Tool: {contagem_13th}")
+
+        if contagem_13th == 13:
+            dano = danoBase * 2
+            if thirteenthTool_sound: thirteenthTool_sound.play()
+            
+            if Level == 5:
+                for inimigo in lista_inimigos:
+                    inimigo.vel = inimigo.vel * 0.7
+
+            if Level == 2:
+                buff_cooldown_restante = 6
+                COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.80
+            elif Level == 3:
+                buff_cooldown_restante = 8
+                COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.60
+            elif Level == 4 or Level == 5 :
+                buff_cooldown_restante = 8
+                COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.40
+
+        if contagem_13th > 13:
+            contagem_13th = 1
+        
+        if buff_cooldown_restante > 0:
+            buff_cooldown_restante -= 1
+
+            if buff_cooldown_restante == 0:
+                COOLDOWN_ARMA = COOLDOWN_ARMA_BASE
+
+
+            
+
+
 
 DaCapoHAVING = False
 DaCapoLevel = 0
@@ -321,7 +372,7 @@ kkomiLEVEL = 0
 
 def menu_levelup_terminal():
     global grade_fixerHaving, grade_fixerLevel
-    global thirteethToolHAVING, thirteethToolLevel
+    global thirteenthToolHAVING, thirteenthToolLevel
     global DaCapoHAVING, DaCapoLevel
     global MimicryHAVING, MimicryLevel
     global CoinHAVING, CoinLevel
@@ -333,12 +384,12 @@ def menu_levelup_terminal():
     opcoes_validas = []
 
     # --- VERIFICAÇÃO DE NÍVEL MÁXIMO (5) ---
-
+    '''
     if grade_fixerLevel < 5:
         opcoes_validas.append({"nome": "Grade Fixer", "desc": "+Atributos Gerais", "id": "grade_fixer", "lvl_atual": grade_fixerLevel})
 
-    if thirteethToolLevel < 5:
-        opcoes_validas.append({"nome": "13th Tool", "desc": "+++Dano Massivo", "id": "13th", "lvl_atual": thirteethToolLevel})
+    if thirteenthToolLevel < 5:
+        opcoes_validas.append({"nome": "13th Tool", "desc": "+++Dano Massivo", "id": "13th", "lvl_atual": thirteenthToolLevel})
 
     if DaCapoLevel < 5:
         opcoes_validas.append({"nome": "Da Capo", "desc": "+++Velocidade Ataque", "id": "dacapo", "lvl_atual": DaCapoLevel})
@@ -357,7 +408,16 @@ def menu_levelup_terminal():
 
     if kkomiLEVEL < 5:
         opcoes_validas.append({"nome": "Kkomi", "desc": "+++Speed Movimento", "id": "kkomi", "lvl_atual": kkomiLEVEL})
+    '''
 
+    if grade_fixerLevel < 5:
+        opcoes_validas.append({"nome": "Grade Fixer", "desc": "+Atributos Gerais", "id": "grade_fixer", "lvl_atual": grade_fixerLevel})
+
+    if thirteenthToolLevel < 5:
+        opcoes_validas.append({"nome": "13th Tool", "desc": "+++Dano Massivo", "id": "13th", "lvl_atual": thirteenthToolLevel})
+    
+    if dFoxLevel < 5:
+        opcoes_validas.append({"nome": "Drifting Fox", "desc": "+++Invulnerabilidade", "id": "dfox", "lvl_atual": dFoxLevel})
 
     print("\n" + "="*50)
     print(f"      LEVEL UP! - ESCOLHA UM E.G.O GIFT")
@@ -395,8 +455,14 @@ def menu_levelup_terminal():
                     grade_fixerLevel += 1
                     
                 elif item['id'] == "13th":
-                    thirteethToolHAVING = True
-                    thirteethToolLevel += 1
+                    thirteenthToolHAVING = True
+                    thirteenthToolLevel += 1
+
+                    if thirteenthToolLevel == 5:
+                        print(">> NÍVEL MÁXIMO: Cooldown Base Reduzido Permanentemente! <<")
+                        COOLDOWN_ARMA_BASE = COOLDOWN_ARMA_BASE * 0.87
+                        if buff_cooldown_restante == 0:
+                            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE
 
                 elif item['id'] == "dacapo":
                     DaCapoHAVING = True
@@ -702,6 +768,10 @@ while running:
                     nova_explosao = Explosao(ponta_arma_x, ponta_arma_y, animacao_explosao)
                     lista_explosoes.append(nova_explosao)
                     
+                    #EgoGIFT
+                    thirteenthTool(thirteenthToolHAVING, thirteenthToolLevel, event)
+
+
                     if explosao_sound:
                         explosao_sound.play()
 
