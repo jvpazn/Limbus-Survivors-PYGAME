@@ -207,56 +207,61 @@ danoBase = 3
 multiplicador_dano_global = 1.0      
 multiplicador_dano_temporario = 1.0 
 COOLDOWN_ARMA_BASE = 1500
-COOLDOWN_ARMA = 1500
+multiplicador_cooldown_global = 1.0      
+multiplicador_cooldown_temporario = 1.0 
 ultimo_ataque = 0 
 espelhado = False 
 Level = 1
 xp = 0
 xp_passar_nivel = 70
 
-# NOVA FUNÇÃO : CALCULAR DANO COM NOVOS MULTIPLICADORES
+#CALCULAR DANO
 def calcular_dano():
     return danoBase * multiplicador_dano_global * multiplicador_dano_temporario
+#CALCULAR ATK SPEED
+def calcular_cooldown():
+    return COOLDOWN_ARMA_BASE * multiplicador_cooldown_global * multiplicador_cooldown_temporario
 
 # E.G.O Gifts
-grade_fixerHaving = False
+grade_fixerHaving = True
 # Se grade_fixerHaving For TRUE automaticamente grade_fixerLevel tem que ser 1 ou mais (APLICA A O RESTO)
-grade_fixerLevel = 0
+grade_fixerLevel = 5
 
 def GradeFixerEGO(Having, level):
-    global multiplicador_dano_global
-    global COOLDOWN_ARMA, velocidade_player, INVULNERAVEL_TEMPO
+    global multiplicador_dano_global, multiplicador_cooldown_global
+    global velocidade_player, INVULNERAVEL_TEMPO
 
     if Having:
         if level == 1:
             multiplicador_dano_global = 1.10
-            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.90
+            multiplicador_cooldown_global = 0.90
             velocidade_player = velocidade_playerBase * 1.10
             INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.10
         elif level == 2:
             multiplicador_dano_global = 1.20
-            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.80
+            multiplicador_cooldown_global = 0.80
             velocidade_player = velocidade_playerBase * 1.20
             INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.20
         elif level == 3:
             multiplicador_dano_global = 1.35
-            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.65
+            multiplicador_cooldown_global = 0.65
             velocidade_player = velocidade_playerBase * 1.35
             INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.35
         elif level == 4:
             multiplicador_dano_global = 1.50
-            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.50
+            multiplicador_cooldown_global = 0.50
             velocidade_player = velocidade_playerBase * 1.50
             INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.50
         elif level == 5:
             multiplicador_dano_global = 2.50
-            COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.50
+            multiplicador_cooldown_global = 0.50
             velocidade_player = velocidade_playerBase * 1.50
             INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.50
 
+GradeFixerEGO(grade_fixerHaving, grade_fixerLevel)
 
-dFoxHAVING = False
-dFoxLevel = 0
+dFoxHAVING = True
+dFoxLevel = 5
 is_dashing = False
 ultimo_dash = -9999
 dash_vector = (0, 0)
@@ -309,16 +314,16 @@ def DrifingFox(Having, Level, keys):
 
 # PLACEHOLDER
 
-thirteenthToolHAVING = False
-thirteenthToolLevel = 0
+thirteenthToolHAVING = True
+thirteenthToolLevel = 5
 
 contagem_13th = 0          
 buff_cooldown_restante = 0  
 
 
 def thirteenthTool(Having, Level, event):
-    global multiplicador_dano_temporario
-    global COOLDOWN_ARMA, COOLDOWN_ARMA_BASE, lista_inimigos
+    global multiplicador_dano_temporario, multiplicador_cooldown_temporario, COOLDOWN_ARMA_BASE
+    global lista_inimigos
     global contagem_13th, buff_cooldown_restante
 
     if not Having or Level == 0:
@@ -328,6 +333,9 @@ def thirteenthTool(Having, Level, event):
 
         # Sempre reseta o buff temporário
         multiplicador_dano_temporario = 1.0
+        if buff_cooldown_restante == 0:
+            multiplicador_cooldown_temporario = 1.0
+            
 
         contagem_13th += 1
         print(f"Contagem 13th Tool: {contagem_13th}")
@@ -346,22 +354,21 @@ def thirteenthTool(Having, Level, event):
 
             if Level == 2:
                 buff_cooldown_restante = 6
-                COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.80
+                multiplicador_cooldown_temporario = 0.80
             elif Level == 3:
                 buff_cooldown_restante = 8
-                COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.60
+                multiplicador_cooldown_temporario = 0.60
             elif Level >= 4:
                 buff_cooldown_restante = 8
-                COOLDOWN_ARMA = COOLDOWN_ARMA_BASE * 0.40
+                multiplicador_cooldown_temporario = 0.40
 
-        if contagem_13th > 13:
+        if contagem_13th >= 13:
             contagem_13th = 1
 
         if buff_cooldown_restante > 0:
             buff_cooldown_restante -= 1
 
             if buff_cooldown_restante == 0:
-                COOLDOWN_ARMA = COOLDOWN_ARMA_BASE
                 multiplicador_dano_temporario = 1.0
 
 
@@ -817,7 +824,7 @@ while running:
             if event.button == 1: # Botão Esquerdo
                 
                 agora = pygame.time.get_ticks()
-                if agora - ultimo_ataque >= COOLDOWN_ARMA:
+                if agora - ultimo_ataque >= calcular_cooldown():
                     
                     ultimo_ataque = agora 
                     
@@ -999,8 +1006,8 @@ while running:
         
         # --- DESENHO DA BARRA DE RECARGA (COOLDOWN) ---
         tempo_passado = tempo_atual - ultimo_ataque
-        if tempo_passado < COOLDOWN_ARMA:
-            porcentagem = tempo_passado / COOLDOWN_ARMA
+        if tempo_passado < calcular_cooldown():
+            porcentagem = tempo_passado / calcular_cooldown()
             
             largura_barra = 60
             altura_barra = 6
