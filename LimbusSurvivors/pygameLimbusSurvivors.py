@@ -223,9 +223,9 @@ def calcular_cooldown():
     return COOLDOWN_ARMA_BASE * multiplicador_cooldown_global * multiplicador_cooldown_temporario
 
 # E.G.O Gifts
-grade_fixerHaving = True
+grade_fixerHaving = False
 # Se grade_fixerHaving For TRUE automaticamente grade_fixerLevel tem que ser 1 ou mais (APLICA A O RESTO)
-grade_fixerLevel = 5
+grade_fixerLevel = 0
 
 def GradeFixerEGO(Having, level):
     global multiplicador_dano_global, multiplicador_cooldown_global
@@ -258,10 +258,9 @@ def GradeFixerEGO(Having, level):
             velocidade_player = velocidade_playerBase * 1.50
             INVULNERAVEL_TEMPO = INVULNERAVEL_TEMPOBase * 1.50
 
-GradeFixerEGO(grade_fixerHaving, grade_fixerLevel)
 
-dFoxHAVING = True
-dFoxLevel = 5
+dFoxHAVING = False
+dFoxLevel = 0
 is_dashing = False
 ultimo_dash = -9999
 dash_vector = (0, 0)
@@ -314,8 +313,8 @@ def DrifingFox(Having, Level, keys):
 
 # PLACEHOLDER
 
-thirteenthToolHAVING = True
-thirteenthToolLevel = 5
+thirteenthToolHAVING = False
+thirteenthToolLevel = 0
 
 contagem_13th = 0          
 buff_cooldown_restante = 0  
@@ -1055,3 +1054,4 @@ while running:
     clock.tick(60)
 
 pygame.quit()
+
